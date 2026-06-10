@@ -598,13 +598,11 @@
     <div class="two-col reveal">
       <div class="vis-box">
         <div class="vis-box-title">LambdaBeam — ExeDec</div>
-        <img src="density_lambdabeam_exedec.pdf" alt="Density plot ExeDec LambdaBeam" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"/>
-        <canvas id="densityExeDec" height="260" style="display:none"></canvas>
+        <img src="density_lambdabeam_exedec.png" alt="Density of solved tasks — ExeDec on LambdaBeam" style="display:block;width:100%;border-radius:3px;"/>
       </div>
       <div class="vis-box">
         <div class="vis-box-title">LambdaBeam — TIIPS</div>
-        <img src="density_lambdabeam_tiips.pdf" alt="Density plot TIIPS LambdaBeam" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"/>
-        <canvas id="densityTIIPS" height="260" style="display:none"></canvas>
+        <img src="density_lambdabeam_tiips.png" alt="Density of solved tasks — TIIPS on LambdaBeam" style="display:block;width:100%;border-radius:3px;"/>
       </div>
     </div>
 
@@ -845,7 +843,7 @@ function drawVenn(canvasId, data) {
   const d   = 130;   // centre-to-centre
   const cx1 = 155, cy1 = 130;   // ExeDec
   const cx2 = 245, cy2 = 130;   // TIIPS
-  const cx3 = 200, cy3 = 243;   // Ind. Baseline  (130 + d*sin60 = 130+112.6)
+  const cx3 = 200, cy3 = 220;   // Ind. Baseline  (130 + d*sin60 = 130+112.6)
 
   // ── Fill ──
   function fillC(cx, cy, color) {
@@ -897,17 +895,17 @@ function drawVenn(canvasId, data) {
   // Baseline only — well below cy3
   lbl(cx3,      cy3 + 40,  data.baseline_only);
   // ExeDec ∩ TIIPS only (top strip, above triple zone)
-  lbl(200,      cy1 - 20,  data.both_et);
+  lbl(200,      cy1 - 30,  data.both_et);
   // Pairwise crescent centres: midpoint of two circle centres, then pushed
   // outward from the triple centroid (200,168) along that radial direction.
   // ExeDec(155,130) + Baseline(200,243) midpoint = (177.5, 186.5)
   // direction away from centroid (200,168): (-22.5, 18.5) → normalised × 22 → (-18, 15)
-  lbl(177 - 30, 187 + 15,  data.exedec_base);
+  lbl(177 - 35, 187 + 10,  data.exedec_base);
   // TIIPS(245,130) + Baseline(200,243) midpoint = (222.5, 186.5)
   // direction away from centroid (200,168): (22.5, 18.5) → normalised × 22 → (18, 15)
-  lbl(223 + 30, 187 + 15,  data.tiips_base);
+  lbl(223 + 35, 187 + 10,  data.tiips_base);
   // All three — centroid of three centres
-  lbl(200,      168+10,        data.all_three);
+  lbl(200,      168,        data.all_three);
 }
 
 function initVenns() {
