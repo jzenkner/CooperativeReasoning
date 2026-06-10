@@ -103,7 +103,7 @@
     .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 1.4rem 1.3rem; text-align: center; }
     .stat-num { font-family: var(--serif); font-size: 2.6rem; line-height: 1; margin-bottom: 0.3rem; color: var(--accent); }
     .stat-num.green  { color: var(--accent2); }
-    .stat-num.purple { color: var(--accent3); }
+    .stat-num.purple { color: var(--accent2); }
     .stat-desc { font-size: 0.81rem; color: var(--muted); line-height: 1.4; }
     .stat-sub  { font-family: var(--mono); font-size: 0.63rem; color: var(--muted); margin-top: 0.35rem; }
 
@@ -258,8 +258,9 @@
   <div class="wrapper">
     <div class="venue-row">
       <span class="venue-tag">ECML PKDD 2026 · Naples</span>
-      <span class="conf-tag">Program Synthesis</span>
-      <span class="conf-tag">Neural–Symbolic</span>
+      <span class="conf-tag">Cooperative Reasoning</span>
+      <span class="conf-tag">Programming-by-example</span>
+      <span class="conf-tag">Neuro–Symbolic</span>
     </div>
     <h1 class="hero-title">
       Beyond Either-Or Reasoning:<br/>
@@ -270,10 +271,10 @@
     <p class="hero-authors">Janis Zenkner &nbsp;·&nbsp; Tobias Sesterhenn &nbsp;·&nbsp; Christian Bartelt</p>
     <p class="hero-affil">Clausthal University of Technology, Clausthal-Zellerfeld, Germany</p>
     <div class="hero-actions">
-      <a href="#" class="btn btn-primary">📄 arXiv</a>
-      <a href="#" class="btn btn-secondary">📑 Paper (ECML)</a>
-      <a href="#" class="btn btn-outline">📎 Appendix</a>
-      <a href="#" class="btn btn-outline">⌨ GitHub</a>
+      <a href="https://arxiv.org/abs/2505.14744" class="btn btn-primary">📄 arXiv</a>
+      <a href="#" class="btn btn-secondary">📑 Paper (ECML): TBA</a>
+      <a href="Appendix.pdf" target="_blank" rel="noopener" class="btn btn-outline">📎 Appendix</a>
+      <a href="https://github.com/jzenkner/CooperativeReasoning" class="btn btn-outline">⌨ GitHub</a>
     </div>
   </div>
 </section>
@@ -301,8 +302,7 @@
         <!-- Legend at top -->
         <div class="traj-legend">
           <div class="tleg"><div class="tleg-node ind"></div>State from program execution</div>
-          <div class="tleg"><div class="tleg-node tra"></div>State from neural prediction M (transductive)</div>
-          <div class="tleg"><div class="tleg-node goal"></div>Goal state s<sub>goal</sub></div>
+          <div class="tleg"><div class="tleg-node tra"></div>State from neural prediction</div>
         </div>
 
         <div class="paradigm-stack">
@@ -355,13 +355,13 @@
             </div>
             <div class="traj">
               <div class="traj-node ind">s₀</div>
-              <div class="traj-step"><span class="traj-prog tra-prog">M</span><span class="traj-arw tra-arw">→</span></div>
+              <div class="traj-step"><span class="traj-prog">p₀</span><span class="traj-arw tra-arw">→</span></div>
               <div class="traj-node tra">s₁</div>
-              <div class="traj-step"><span class="traj-prog">p₁</span><span class="traj-arw">→</span></div>
+              <div class="traj-step"><span class="traj-prog">p₁</span><span class="traj-arw tra-arw">→</span></div>
               <div class="traj-node tra">s₂</div>
-              <div class="traj-step"><span class="traj-prog">p₂</span><span class="traj-arw">→</span></div>
+              <div class="traj-step"><span class="traj-prog">p₂</span><span class="traj-arw tra-arw">→</span></div>
               <div class="traj-node tra">s₃</div>
-              <div class="traj-step"><span class="traj-prog">p₃</span><span class="traj-arw">→</span></div>
+              <div class="traj-step"><span class="traj-prog">p₃</span><span class="traj-arw tra-arw">→</span></div>
               <div class="traj-node tra">s₄</div>
             </div>
             <p class="p-desc">Target states are pre-determined by transduction (dashed). Programs p<sub>i</sub> realise each fixed subgoal but induction cannot deviate — one wrong M prediction poisons the entire trajectory.</p>
@@ -375,9 +375,9 @@
             </div>
             <div class="traj">
               <div class="traj-node ind">s₀</div>
-              <div class="traj-step"><span class="traj-prog">p₁</span><span class="traj-arw">→</span></div>
-              <div class="traj-node ind">s₁</div>
-              <div class="traj-step"><span class="traj-prog tra-prog">M</span><span class="traj-arw tra-arw">→</span></div>
+              <div class="traj-step"><span class="traj-prog">p₀</span><span class="traj-arw tra-arw">→</span></div>
+              <div class="traj-node tra">s₁</div>
+              <div class="traj-step"><span class="traj-prog">p₁</span><span class="traj-arw tra-arw">→</span></div>
               <div class="traj-node tra">s₂</div>
               <div class="traj-step"><span class="traj-prog">p₂</span><span class="traj-arw">→</span></div>
               <div class="traj-node ind">s₃</div>
@@ -597,12 +597,12 @@
 
     <div class="two-col reveal">
       <div class="vis-box">
-        <div class="vis-box-title">LambdaBeam — ExeDec</div>
-        <img src="density_lambdabeam_exedec.png" alt="Density of solved tasks — ExeDec on LambdaBeam" style="display:block;width:100%;border-radius:3px;"/>
-      </div>
-      <div class="vis-box">
         <div class="vis-box-title">LambdaBeam — TIIPS</div>
         <img src="density_lambdabeam_tiips.png" alt="Density of solved tasks — TIIPS on LambdaBeam" style="display:block;width:100%;border-radius:3px;"/>
+      </div>
+      <div class="vis-box">
+        <div class="vis-box-title">LambdaBeam — ExeDec</div>
+        <img src="density_lambdabeam_exedec.png" alt="Density of solved tasks — ExeDec on LambdaBeam" style="display:block;width:100%;border-radius:3px;"/>
       </div>
     </div>
 
