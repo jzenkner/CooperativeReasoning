@@ -17,7 +17,7 @@
       --muted:     #6b6b65;
       --accent:    #115e17;
       --accent2:   #396332;
-      --accent3:   #6a598c;
+      --accent3:   #718090;
       --mono:      'DM Mono', monospace;
       --serif:     'DM Serif Display', serif;
       --sans:      'DM Sans', sans-serif;
@@ -570,7 +570,7 @@
     </div>
     <div class="chart-legend">
       <div class="cl-item"><div class="cl-dot" style="background:#396332"></div>TIIPS</div>
-      <div class="cl-item"><div class="cl-dot" style="background:#6a598c"></div>ExeDec</div>
+      <div class="cl-item"><div class="cl-dot" style="background:#718090"></div>ExeDec</div>
       <div class="cl-item"><div class="cl-dot" style="background:#9e9e96"></div>Ind. Baseline</div>
     </div>
 
@@ -645,7 +645,7 @@ document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 
 /* ── PALETTE ── */
 const C_TIIPS    = '#396332';
-const C_EXEDEC   = '#6a598c';
+const C_EXEDEC   = '#718090';
 const C_BASELINE = '#9e9e96';
 
 /* ── GROUPED BAR CHART (custom canvas) ── */
@@ -891,19 +891,23 @@ function drawVenn(canvasId, data) {
   }
 
   // ExeDec only  — far left of cx1, mid-height of top circles
-  lbl(cx1 - 72, cy1,       data.exedec_only);
+  lbl(cx1 - 52, cy1 - 20,       data.exedec_only);
   // TIIPS only   — far right of cx2
-  lbl(cx2 + 72, cy2,       data.tiips_only);
+  lbl(cx2 + 52, cy2 - 20,       data.tiips_only);
   // Baseline only — well below cy3
-  lbl(cx3,      cy3 + 68,  data.baseline_only);
+  lbl(cx3,      cy3 + 40,  data.baseline_only);
   // ExeDec ∩ TIIPS only (top strip, above triple zone)
-  lbl(200,      cy1 - 28,  data.both_et);
-  // ExeDec ∩ Baseline only: midpoint of (cx1,cy1)–(cx3,cy3), pushed away from TIIPS
-  lbl(162, 186, data.exedec_base);
-  // TIIPS ∩ Baseline only: midpoint of (cx2,cy2)–(cx3,cy3), pushed away from ExeDec
-  lbl(238, 186, data.tiips_base);
-  // All three — centroid
-  lbl(200,      168,        data.all_three);
+  lbl(200,      cy1 - 20,  data.both_et);
+  // Pairwise crescent centres: midpoint of two circle centres, then pushed
+  // outward from the triple centroid (200,168) along that radial direction.
+  // ExeDec(155,130) + Baseline(200,243) midpoint = (177.5, 186.5)
+  // direction away from centroid (200,168): (-22.5, 18.5) → normalised × 22 → (-18, 15)
+  lbl(177 - 30, 187 + 15,  data.exedec_base);
+  // TIIPS(245,130) + Baseline(200,243) midpoint = (222.5, 186.5)
+  // direction away from centroid (200,168): (22.5, 18.5) → normalised × 22 → (18, 15)
+  lbl(223 + 30, 187 + 15,  data.tiips_base);
+  // All three — centroid of three centres
+  lbl(200,      168+10,        data.all_three);
 }
 
 function initVenns() {
