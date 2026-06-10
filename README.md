@@ -69,7 +69,7 @@ Each domain includes six generalisation splits: `NONE` (in-distribution), `LENGT
 
 ## Training
 
-First generate training data:
+First generate data:
 
 ```bash
 bash tasks/deepcoder/dataset/run_data_generation.sh
@@ -78,11 +78,14 @@ bash tasks/lambdabeam/dataset/run_data_generation.sh
 ```
 
 Then train the TIIPS models (each script trains both the inductive synthesizer and the transductive guide):
+- Training mode for inductive synthesizer: model_type=synthesizer_model
+- Training mode for transductive decomposition model: model_type=decomposition_model
+- Training mode for inductive baseline model: model_type=joint_model
 
 ```bash
-bash tiips/run_deepcoder_training.sh
-bash tiips/run_robustfill_training.sh
-bash tiips/run_lambdabeam_training.sh
+bash spec_decomposition/run_deepcoder_training.sh
+bash spec_decomposition/run_robustfill_training.sh
+bash spec_decomposition/run_lambdabeam_training.sh
 ```
 
 Adjust scripts for your environment (TPU, SLURM, Docker) as needed.
@@ -94,10 +97,14 @@ Adjust scripts for your environment (TPU, SLURM, Docker) as needed.
 Evaluate trained checkpoints end-to-end:
 
 ```bash
-bash tiips/run_deepcoder_end_to_end_predict.sh
-bash tiips/run_robustfill_end_to_end_predict.sh
-bash tiips/run_lambdabeam_end_to_end_predict.sh
+bash spec_decomposition/run_deepcoder_end_to_end_predict.sh
+bash spec_decomposition/run_robustfill_end_to_end_predict.sh
+bash spec_decomposition/run_lambdabeam_end_to_end_predict.sh
 ```
+
+- Evaluation mode for TIIPS: prediction_type=tiips
+- Evaluation mode for ExeDec: prediction_type=separate
+- Evaluation mode for inductive baseline: prediction_type=baseline
 
 `end_to_end_predict.py` runs the incremental intervention schedule: it attempts purely inductive synthesis first (j = 0), then progressively introduces transductive guidance steps (j = 1 … J), returning the first successful program found. j = 0 recovers the inductive baseline; j = J recovers ExeDec; all gains come from the cooperative regime in between.
 
