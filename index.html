@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TIIPS – Cooperative Transductive-Inductive Program Synthesis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
+  <style>
+    /* ── TOKENS (SAD palette) ── */
+    :root {
+      --bg:        #eaeae7;
+      --surface:   #d9d9d9;
+      --surface2:  #747473;
+      --border:    #d4d4ce;
+      --ink:       #1a1a18;
+      --muted:     #6b6b65;
+      --accent:    #115e17;
+      --accent2:   #396332;
+      --accent3:   #6a598c;
+      --mono:      'DM Mono', monospace;
+      --serif:     'DM Serif Display', serif;
+      --sans:      'DM Sans', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 16px;
+      line-height: 1.75;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.022'/%3E%3C/svg%3E");
+      pointer-events: none;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2.5rem; height: 52px;
+      background: rgba(234,234,231,0.93);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo { font-family: var(--mono); font-size: 0.78rem; color: var(--accent); letter-spacing: 0.08em; }
+    .nav-links { display: flex; gap: 1.6rem; list-style: none; }
+    .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.82rem; transition: color .2s; }
+    .nav-links a:hover { color: var(--ink); }
+
+    /* ── WRAPPER ── */
+    .wrapper { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 0 2rem; }
+
+    /* ── HERO ── */
+    #hero { padding: 136px 0 80px; border-bottom: 1px solid var(--border); }
+
+    .venue-row { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 2rem; opacity: 0; animation: fadeUp .5s .1s forwards; }
+    .venue-tag { font-family: var(--mono); font-size: 0.67rem; letter-spacing: 0.14em; color: var(--accent2); border: 1px solid var(--accent2); border-radius: 2px; padding: 3px 9px; text-transform: uppercase; }
+    .conf-tag  { font-family: var(--mono); font-size: 0.67rem; letter-spacing: 0.14em; color: var(--muted); border: 1px solid var(--border); border-radius: 2px; padding: 3px 9px; text-transform: uppercase; }
+
+    .hero-title { font-family: var(--serif); font-size: clamp(2rem, 4.8vw, 3.4rem); font-weight: 400; line-height: 1.1; margin-bottom: 0.6rem; color: var(--ink); opacity: 0; animation: fadeUp .6s .2s forwards; }
+    .hero-title em { font-style: italic; color: var(--accent); }
+    .hero-subtitle { font-family: var(--serif); font-style: italic; font-size: clamp(1.1rem, 2.2vw, 1.4rem); color: var(--muted); margin-bottom: 1.6rem; opacity: 0; animation: fadeUp .6s .28s forwards; }
+    .hero-authors  { font-size: 0.92rem; color: var(--muted); margin-bottom: 0.3rem; font-weight: 300; opacity: 0; animation: fadeUp .6s .34s forwards; }
+    .hero-affil    { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); margin-bottom: 2.2rem; letter-spacing: 0.04em; opacity: 0; animation: fadeUp .6s .38s forwards; }
+    .hero-actions  { display: flex; flex-wrap: wrap; gap: 0.7rem; opacity: 0; animation: fadeUp .6s .46s forwards; }
+
+    .btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.55rem 1.25rem; border-radius: 3px; font-size: 0.84rem; font-weight: 500; font-family: var(--sans); text-decoration: none; transition: all .18s; border: 1px solid transparent; }
+    .btn-primary   { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: #0d4a12; }
+    .btn-secondary { background: var(--accent2); color: #fff; }
+    .btn-secondary:hover { background: #2a4d26; }
+    .btn-outline   { background: transparent; border-color: var(--border); color: var(--ink); }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── SECTIONS ── */
+    section { padding: 4.5rem 0; border-bottom: 1px solid var(--border); }
+    .eyebrow { font-family: var(--mono); font-size: 0.63rem; letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase; margin-bottom: 0.75rem; }
+    h2 { font-family: var(--serif); font-size: clamp(1.5rem, 2.8vw, 2.1rem); font-weight: 400; margin-bottom: 1.3rem; line-height: 1.18; }
+    h3 { font-family: var(--serif); font-size: 1.2rem; font-weight: 400; margin-bottom: 0.5rem; }
+    p  { margin-bottom: 1rem; color: #3d3b35; }
+    p:last-child { margin-bottom: 0; }
+
+    /* ── CALLOUT ── */
+    .callout { margin: 2.2rem 0; padding: 1.6rem 2rem; background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 4px; }
+    .callout-label { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.55rem; }
+    .callout p { margin: 0; font-size: 0.96rem; line-height: 1.65; color: var(--ink); }
+    .callout.amber { border-left-color: var(--accent3); }
+    .callout.amber .callout-label { color: var(--accent3); }
+    .callout.green { border-left-color: var(--accent2); }
+    .callout.green .callout-label { color: var(--accent2); }
+
+    /* ── STATS ROW ── */
+    .stat-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.1rem; margin: 2rem 0; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 1.4rem 1.3rem; text-align: center; }
+    .stat-num { font-family: var(--serif); font-size: 2.6rem; line-height: 1; margin-bottom: 0.3rem; color: var(--accent); }
+    .stat-num.green  { color: var(--accent2); }
+    .stat-num.purple { color: var(--accent3); }
+    .stat-desc { font-size: 0.81rem; color: var(--muted); line-height: 1.4; }
+    .stat-sub  { font-family: var(--mono); font-size: 0.63rem; color: var(--muted); margin-top: 0.35rem; }
+
+    /* ── TRAJECTORY DIAGRAM ── */
+    .teaser-wrap { margin: 1.4rem 0 0; padding: 1.4rem 1.6rem; background: var(--bg); border: 1px solid var(--border); border-radius: 5px; overflow-x: auto; }
+    .teaser-label { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 1rem; }
+
+    /* Legend at top */
+    .traj-legend { display: flex; gap: 1.4rem; flex-wrap: wrap; margin-bottom: 1.2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); font-size: 0.78rem; color: var(--muted); }
+    .tleg { display: flex; align-items: center; gap: 0.45rem; }
+    .tleg-node { width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0; }
+    .tleg-node.ind  { border: 2px solid var(--accent);  background: rgba(17,94,23,0.07); }
+    .tleg-node.tra  { border: 2px dashed var(--accent3); background: rgba(106,89,140,0.07); }
+    .tleg-node.goal { border: 2px solid var(--accent2);  background: rgba(57,99,50,0.09); }
+
+    /* stacked rows, all same width */
+    .paradigm-stack { display: flex; flex-direction: column; gap: 0.8rem; }
+    .paradigm-row { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 0.9rem 1.1rem; }
+    .paradigm-row.cooperative { border-color: var(--accent2); background: rgba(57,99,50,0.05); }
+
+    .p-head { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.65rem; }
+    .p-badge { font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.1em; padding: 2px 7px; border-radius: 2px; text-transform: uppercase; }
+    .badge-inductive    { background: rgba(17,94,23,0.1);   color: var(--accent);  border: 1px solid rgba(17,94,23,0.25); }
+    .badge-transductive { background: rgba(106,89,140,0.1); color: var(--accent3); border: 1px solid rgba(106,89,140,0.25); }
+    .badge-hybrid       { background: rgba(107,107,101,0.1);color: var(--muted);   border: 1px solid var(--border); }
+    .badge-cooperative  { background: rgba(57,99,50,0.12);  color: var(--accent2); border: 1px solid rgba(57,99,50,0.3); }
+    .p-title { font-family: var(--sans); font-size: 0.88rem; font-weight: 500; color: var(--ink); }
+
+    .traj { display: flex; align-items: center; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 0.1rem; }
+    .traj-node { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--border); background: var(--surface); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 0.6rem; color: var(--muted); }
+    .traj-node.ind  { border: 2px solid var(--accent);        background: rgba(17,94,23,0.07);   color: var(--accent); }
+    .traj-node.tra  { border: 2px dashed var(--accent3);      background: rgba(106,89,140,0.07); color: var(--accent3); }
+    .traj-node.goal { border: 2px solid var(--accent2);       background: rgba(57,99,50,0.09);   color: var(--accent2); }
+    .traj-step { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; margin: 0 2px; }
+    .traj-prog { font-family: var(--mono); font-size: 0.52rem; color: var(--accent); letter-spacing: 0.04em; margin-bottom: 1px; white-space: nowrap; }
+    .traj-prog.tra-prog { color: var(--accent3); }
+    .traj-arw { font-size: 0.85rem; line-height: 1; color: var(--accent); }
+    .traj-arw.tra-arw { color: var(--accent3); }
+    .p-desc { font-size: 0.81rem; color: var(--muted); margin-top: 0.55rem; line-height: 1.5; }
+
+    /* ── FRAMEWORK CRITERIA ── */
+    .criteria-list { display: flex; flex-direction: column; gap: 1rem; margin: 2rem 0; }
+    .criterion { display: flex; gap: 1.4rem; align-items: flex-start; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 1.3rem 1.5rem; transition: border-color .2s; }
+    .criterion:hover { border-color: var(--accent2); }
+    .crit-num { font-family: var(--serif); font-size: 2rem; color: var(--border); line-height: 1; flex-shrink: 0; width: 2rem; text-align: right; transition: color .2s; }
+    .criterion:hover .crit-num { color: var(--accent2); }
+    .crit-body h3 { font-family: var(--sans); font-size: 0.95rem; font-weight: 500; margin-bottom: 0.35rem; }
+    .crit-body p  { font-size: 0.86rem; margin: 0; }
+
+    /* ── TIIPS ALGO ── */
+    .algo-box { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 1.8rem 2rem; margin: 2rem 0; }
+    .algo-title { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 1.2rem; }
+    .algo-flow { display: flex; flex-direction: column; gap: 0; }
+    .algo-step { display: flex; align-items: stretch; gap: 0; }
+    .algo-spine { width: 2px; background: var(--border); margin: 0 1.3rem; flex-shrink: 0; position: relative; }
+    .algo-spine::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 10px; height: 10px; border-radius: 50%; background: var(--surface); border: 2px solid var(--border); }
+    .algo-step.guided .algo-spine::before { background: var(--accent3); border-color: var(--accent3); }
+    .algo-step.free   .algo-spine::before { background: var(--accent);  border-color: var(--accent); }
+    .algo-step.check  .algo-spine::before { background: var(--accent2); border-color: var(--accent2); }
+    .algo-content { padding: 0.2rem 0 1.4rem; flex: 1; }
+    .algo-badge { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.1em; padding: 2px 7px; border-radius: 2px; text-transform: uppercase; display: inline-block; margin-bottom: 0.4rem; }
+    .algo-step.guided .algo-badge { background: rgba(106,89,140,0.1); color: var(--accent3); border: 1px solid rgba(106,89,140,0.2); }
+    .algo-step.free   .algo-badge { background: rgba(17,94,23,0.1);   color: var(--accent);  border: 1px solid rgba(17,94,23,0.2); }
+    .algo-step.check  .algo-badge { background: rgba(57,99,50,0.1);   color: var(--accent2); border: 1px solid rgba(57,99,50,0.2); }
+    .algo-content p { font-size: 0.87rem; margin: 0; line-height: 1.5; }
+
+    /* ── GROUPED BAR CHART (canvas) ── */
+    .chart-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; margin: 2rem 0; }
+    .chart-box { background: var(--surface); border: 1px solid var(--border); border-radius: 5px; padding: 1.2rem 1.4rem; min-height: 220px; }
+    .chart-box-title { font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.9rem; }
+    .chart-box canvas { display: block; }
+
+    /* shared legend for charts */
+    .chart-legend { display: flex; gap: 1.2rem; flex-wrap: wrap; margin-top: 1rem; justify-content: center; }
+    .cl-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--muted); }
+    .cl-dot  { width: 11px; height: 11px; border-radius: 2px; flex-shrink: 0; }
+
+    /* ── VENN + DENSITY LAYOUT ── */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; margin: 2rem 0; }
+    .vis-box { background: var(--surface); border: 1px solid var(--border); border-radius: 5px; padding: 1.2rem 1.4rem; }
+    .vis-box-title { font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.9rem; }
+    .vis-box canvas { display: block; }
+    .vis-box img { display: block; width: 100%; border-radius: 3px; }
+
+    /* ── DOMAINS ── */
+    .domain-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.1rem; margin-top: 1.8rem; }
+    .domain-card { background: var(--surface); border: 1px solid var(--border); border-radius: 5px; padding: 1.4rem 1.5rem; transition: border-color .2s; }
+    .domain-card:hover { border-color: var(--accent); }
+    .domain-pill { display: inline-block; font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.1em; padding: 2px 8px; border-radius: 2px; margin-bottom: 0.65rem; text-transform: uppercase; }
+    .domain-card.rf .domain-pill { color: var(--accent);  border: 1px solid rgba(17,94,23,0.35); }
+    .domain-card.dc .domain-pill { color: var(--accent2); border: 1px solid rgba(57,99,50,0.35); }
+    .domain-card.lb .domain-pill { color: var(--accent3); border: 1px solid rgba(106,89,140,0.35); }
+    .domain-card h3 { font-family: var(--mono); font-size: 0.84rem; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+    .domain-card.rf h3 { color: var(--accent); }
+    .domain-card.dc h3 { color: var(--accent2); }
+    .domain-card.lb h3 { color: var(--accent3); }
+    .domain-card p { font-size: 0.84rem; margin: 0; }
+
+    code { font-family: var(--mono); font-size: 0.82em; background: var(--surface); color: var(--accent); padding: 1px 5px; border-radius: 2px; }
+
+    /* ── CONTRIBUTIONS ── */
+    .contrib-list { display: flex; flex-direction: column; gap: 1rem; margin-top: 1.8rem; }
+    .contrib { display: flex; gap: 1.4rem; align-items: flex-start; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 1.3rem 1.5rem; transition: border-color .2s; }
+    .contrib:hover { border-color: var(--accent2); }
+    .contrib-n { font-family: var(--serif); font-size: 2rem; color: var(--border); line-height: 1; flex-shrink: 0; width: 2rem; text-align: right; transition: color .2s; }
+    .contrib:hover .contrib-n { color: var(--accent2); }
+    .contrib-text h3 { font-family: var(--sans); font-size: 0.95rem; font-weight: 500; margin-bottom: 0.35rem; }
+    .contrib-text p  { font-size: 0.86rem; margin: 0; }
+
+    /* ── CITATION ── */
+    .citation-box { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 1.3rem 1.6rem; font-family: var(--mono); font-size: 0.78rem; line-height: 1.9; color: var(--ink); }
+    .copy-btn { margin-top: 0.9rem; background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 0.45rem 1.1rem; border-radius: 3px; font-family: var(--mono); font-size: 0.72rem; cursor: pointer; transition: all .2s; }
+    .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── FOOTER ── */
+    footer { position: relative; z-index: 1; padding: 2.2rem 2rem; text-align: center; color: var(--muted); font-size: 0.79rem; border-top: 1px solid var(--border); }
+    footer a { color: var(--accent); text-decoration: none; }
+
+    /* ── REVEAL / ANIMATION ── */
+    .reveal { opacity: 0; transform: translateY(14px); transition: opacity .55s, transform .55s; }
+    .reveal.visible { opacity: 1; transform: none; }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
+    /* ── MOBILE ── */
+    @media (max-width: 660px) {
+      nav { padding: 0 1.2rem; }
+      .nav-links { display: none; }
+      .wrapper { padding: 0 1.2rem; }
+      #hero { padding: 96px 0 52px; }
+      .stat-row, .chart-pair, .two-col, .domain-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <span class="nav-logo">TIIPS · ECML 2026</span>
+  <ul class="nav-links">
+    <li><a href="#abstract">Overview</a></li>
+    <li><a href="#contributions">Contributions</a></li>
+    <li><a href="#framework">Framework</a></li>
+    <li><a href="#method">TIIPS</a></li>
+    <li><a href="#setup">Setup</a></li>
+    <li><a href="#results">Results</a></li>
+    <li><a href="#citation">Cite</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="wrapper">
+    <div class="venue-row">
+      <span class="venue-tag">ECML PKDD 2026 · Naples</span>
+      <span class="conf-tag">Program Synthesis</span>
+      <span class="conf-tag">Neural–Symbolic</span>
+    </div>
+    <h1 class="hero-title">
+      Beyond Either-Or Reasoning:<br/>
+      <em>Transduction and Induction</em><br/>
+      as Cooperative Problem-Solving Paradigms
+    </h1>
+    <p class="hero-subtitle">When neither paradigm should unconditionally own the trajectory.</p>
+    <p class="hero-authors">Janis Zenkner &nbsp;·&nbsp; Tobias Sesterhenn &nbsp;·&nbsp; Christian Bartelt</p>
+    <p class="hero-affil">Clausthal University of Technology, Clausthal-Zellerfeld, Germany</p>
+    <div class="hero-actions">
+      <a href="#" class="btn btn-primary">📄 arXiv</a>
+      <a href="#" class="btn btn-secondary">📑 Paper (ECML)</a>
+      <a href="#" class="btn btn-outline">📎 Appendix</a>
+      <a href="#" class="btn btn-outline">⌨ GitHub</a>
+    </div>
+  </div>
+</section>
+
+<!-- OVERVIEW / ABSTRACT -->
+<section id="abstract">
+  <div class="wrapper">
+    <div class="eyebrow">Overview</div>
+    <h2>Two Paradigms, One Trajectory</h2>
+
+    <p>
+      Programming-by-example (PBE) has long been approached through one of two lenses. The <strong>inductive</strong> approach searches over a symbolic program space to find a reusable program consistent with the provided input-output examples. The <strong>transductive</strong> approach treats the examples as context and predicts missing outputs directly, without ever constructing a program artifact.
+    </p>
+    <p>
+      Both paradigms succeed — but they fail on <em>systematically different tasks</em>. Induction excels at compositional, logically precise transformations; transduction excels at fluid pattern-matching where explicit rule construction stalls. This complementarity holds not just across tasks, but at the level of individual reasoning steps within the same solution trajectory.
+    </p>
+
+    <div class="callout reveal">
+      <div class="callout-label">The Problem with Existing Combinations</div>
+      <p>Current hybrid approaches — such as ExeDec — use transductive predictions to pre-determine the full solution trajectory. The inductive synthesizer is then constrained to reach each transductively fixed next state, retaining only <em>local</em> search autonomy. When a transductive prediction is wrong, the error propagates irrecoverably: induction cannot deviate to find a globally consistent solution, even if one exists.</p>
+
+      <div class="teaser-wrap">
+        <div class="teaser-label">Four paradigms — one solution trajectory</div>
+
+        <!-- Legend at top -->
+        <div class="traj-legend">
+          <div class="tleg"><div class="tleg-node ind"></div>State from program execution</div>
+          <div class="tleg"><div class="tleg-node tra"></div>State from neural prediction M (transductive)</div>
+          <div class="tleg"><div class="tleg-node goal"></div>Goal state s<sub>goal</sub></div>
+        </div>
+
+        <div class="paradigm-stack">
+
+          <!-- (a) INDUCTIVE -->
+          <div class="paradigm-row">
+            <div class="p-head">
+              <span class="p-badge badge-inductive">Inductive</span>
+              <span class="p-title">Full inductive control</span>
+            </div>
+            <div class="traj">
+              <div class="traj-node ind">s₀</div>
+              <div class="traj-step"><span class="traj-prog">p₁</span><span class="traj-arw">→</span></div>
+              <div class="traj-node ind">s₁</div>
+              <div class="traj-step"><span class="traj-prog">p₂</span><span class="traj-arw">→</span></div>
+              <div class="traj-node ind">s₂</div>
+              <div class="traj-step"><span class="traj-prog">p₃</span><span class="traj-arw">→</span></div>
+              <div class="traj-node ind">s₃</div>
+              <div class="traj-step"><span class="traj-prog">p₄</span><span class="traj-arw">→</span></div>
+              <div class="traj-node goal">s₄</div>
+            </div>
+            <p class="p-desc">Every transition is an inductive step. The synthesizer holds full trajectory autonomy but suffers from combinatorial explosion as program length grows.</p>
+          </div>
+
+          <!-- (b) TRANSDUCTIVE -->
+          <div class="paradigm-row">
+            <div class="p-head">
+              <span class="p-badge badge-transductive">Transductive</span>
+              <span class="p-title">Full transductive control</span>
+            </div>
+            <div class="traj">
+              <div class="traj-node ind">s₀</div>
+              <div class="traj-step"><span class="traj-prog tra-prog">M</span><span class="traj-arw tra-arw">→</span></div>
+              <div class="traj-node tra">s₁</div>
+              <div class="traj-step"><span class="traj-prog tra-prog">M</span><span class="traj-arw tra-arw">→</span></div>
+              <div class="traj-node tra">s₂</div>
+              <div class="traj-step"><span class="traj-prog tra-prog">M</span><span class="traj-arw tra-arw">→</span></div>
+              <div class="traj-node tra">s₃</div>
+              <div class="traj-step"><span class="traj-prog tra-prog">M</span><span class="traj-arw tra-arw">→</span></div>
+              <div class="traj-node tra">s₄</div>
+            </div>
+            <p class="p-desc">All states are predicted by the neural model M (dashed = transductively determined). No symbolic program is produced; no reusable artifact results.</p>
+          </div>
+
+          <!-- (c) HYBRID -->
+          <div class="paradigm-row">
+            <div class="p-head">
+              <span class="p-badge badge-hybrid">Hybrid (ExeDec)</span>
+              <span class="p-title">Transductively fixed, inductively realised</span>
+            </div>
+            <div class="traj">
+              <div class="traj-node ind">s₀</div>
+              <div class="traj-step"><span class="traj-prog tra-prog">M</span><span class="traj-arw tra-arw">→</span></div>
+              <div class="traj-node tra">s₁</div>
+              <div class="traj-step"><span class="traj-prog">p₁</span><span class="traj-arw">→</span></div>
+              <div class="traj-node tra">s₂</div>
+              <div class="traj-step"><span class="traj-prog">p₂</span><span class="traj-arw">→</span></div>
+              <div class="traj-node tra">s₃</div>
+              <div class="traj-step"><span class="traj-prog">p₃</span><span class="traj-arw">→</span></div>
+              <div class="traj-node tra">s₄</div>
+            </div>
+            <p class="p-desc">Target states are pre-determined by transduction (dashed). Programs p<sub>i</sub> realise each fixed subgoal but induction cannot deviate — one wrong M prediction poisons the entire trajectory.</p>
+          </div>
+
+          <!-- (d) COOPERATIVE -->
+          <div class="paradigm-row cooperative">
+            <div class="p-head">
+              <span class="p-badge badge-cooperative">Cooperative (TIIPS)</span>
+              <span class="p-title">Both paradigms co-determine the trajectory</span>
+            </div>
+            <div class="traj">
+              <div class="traj-node ind">s₀</div>
+              <div class="traj-step"><span class="traj-prog">p₁</span><span class="traj-arw">→</span></div>
+              <div class="traj-node ind">s₁</div>
+              <div class="traj-step"><span class="traj-prog tra-prog">M</span><span class="traj-arw tra-arw">→</span></div>
+              <div class="traj-node tra">s₂</div>
+              <div class="traj-step"><span class="traj-prog">p₂</span><span class="traj-arw">→</span></div>
+              <div class="traj-node ind">s₃</div>
+              <div class="traj-step"><span class="traj-prog">p₃</span><span class="traj-arw">→</span></div>
+              <div class="traj-node goal">s₄</div>
+            </div>
+            <p class="p-desc">Inductive steps (solid, p<sub>i</sub>) and transductive search-horizon resets (dashed, M) interleave freely. After each M-step, f<sub>syn</sub> recovers full search autonomy — the prediction is a springboard, not a blueprint.</p>
+          </div>
+
+        </div><!-- /paradigm-stack -->
+      </div><!-- /teaser-wrap -->
+    </div><!-- /callout -->
+
+    <p>
+      We propose <strong>cooperative transductive-inductive problem solving</strong>: both paradigms interleave dynamically along the trajectory, with neither unconditionally controlling it. Each transductive prediction acts only as a <em>search horizon reset</em>, not a blueprint the inductive solver is forced to follow.
+    </p>
+
+    <div class="stat-row reveal">
+      <div class="stat-card">
+        <div class="stat-num">+10 pp</div>
+        <div class="stat-desc">over ExeDec on DeepCoder</div>
+        <div class="stat-sub">avg. across all categories</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num green">221</div>
+        <div class="stat-desc">tasks solved exclusively by TIIPS</div>
+        <div class="stat-sub">unreachable by any ensemble</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num purple">+13 pp</div>
+        <div class="stat-desc">over ExeDec on LambdaBeam</div>
+        <div class="stat-sub">avg. across all categories</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- CONTRIBUTIONS -->
+<section id="contributions">
+  <div class="wrapper">
+    <div class="eyebrow">Contributions</div>
+    <h2>What We Contribute</h2>
+
+    <div class="contrib-list reveal">
+      <div class="contrib">
+        <div class="contrib-n">1</div>
+        <div class="contrib-text">
+          <h3>A General Cooperative Framework</h3>
+          <p>A formal definition of cooperative transductive-inductive problem solving, with three necessary criteria (Dual Agency, Interleaved Granularity, Search Autonomy Preservation) that distinguish genuine cooperation from ensemble and subordination approaches. The framework is paradigm-agnostic and applies to any system where symbolic and neural reasoners share a state space.</p>
+        </div>
+      </div>
+      <div class="contrib">
+        <div class="contrib-n">2</div>
+        <div class="contrib-text">
+          <h3>TIIPS — a Proof-of-Concept Instantiation</h3>
+          <p>Transductively Informed Inductive Program Synthesis, which uses transduction as a search horizon reset rather than a trajectory blueprint. The incremental intervention schedule recovers the inductive baseline at j = 0 and ExeDec at j = J, isolating all performance gains to the cooperative regime 0 &lt; j &lt; J.</p>
+        </div>
+      </div>
+      <div class="contrib">
+        <div class="contrib-n">3</div>
+        <div class="contrib-text">
+          <h3>The Cooperative Dividend</h3>
+          <p>Empirical evidence that TIIPS solves tasks unreachable by any ensemble of ExeDec and the inductive baseline — directly validating Search Autonomy Preservation and ruling out both the prefix-of-ExeDec and ensemble explanations for TIIPS's gains.</p>
+        </div>
+      </div>
+      <div class="contrib">
+        <div class="contrib-n">4</div>
+        <div class="contrib-text">
+          <h3>Robustness Beyond Accuracy</h3>
+          <p>TIIPS not only solves more tasks but more frequently recovers the <em>intended</em> program — higher intent match and syntactic overlap with ground truth. Cooperative solvers are not just more powerful than their components; they are more reliably correct.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FRAMEWORK -->
+<section id="framework">
+  <div class="wrapper">
+    <div class="eyebrow">Cooperative Framework</div>
+    <h2>What Makes a Combination <em>Truly</em> Cooperative?</h2>
+
+    <p>
+      We formalize problem solving as navigation through a state space S. At every state s<sub>t</sub>, a solver can take an <strong>inductive transition</strong> — synthesizing a symbolic program fragment — or a <strong>transductive transition</strong> — using a neural model to leap directly to the next state. An approach qualifies as cooperative if and only if it satisfies three criteria:
+    </p>
+
+    <div class="criteria-list reveal">
+      <div class="criterion">
+        <div class="crit-num">1</div>
+        <div class="crit-body">
+          <h3>Dual Agency</h3>
+          <p>Both paradigms function as active problem-solvers. Neither exists solely to constrain, sketch, or pre-process the output of the other. This rules out approaches where induction serves only as a data-augmentation step, or where transduction is merely a feature extractor.</p>
+        </div>
+      </div>
+      <div class="criterion">
+        <div class="crit-num">2</div>
+        <div class="crit-body">
+          <h3>Interleaved Granularity</h3>
+          <p>The system permits switching between paradigms at the level of individual reasoning steps — not only at task initialization or termination. This rules out ensemble approaches, where the two paradigms run in parallel and never interact within a single solution trajectory.</p>
+        </div>
+      </div>
+      <div class="criterion">
+        <div class="crit-num">3</div>
+        <div class="crit-body">
+          <h3>Search Autonomy Preservation</h3>
+          <p>After a transductive transition, the new state becomes a fresh search root from which either solver explores the full program space, unconstrained by further consistency requirements. Each transductive step is a <em>search horizon reset</em> — bypassing a syntactic bottleneck without irrevocably pruning the paths that follow.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout green reveal">
+      <div class="callout-label">Why This Matters</div>
+      <p>Any system satisfying these three criteria qualifies as cooperative, regardless of how switching is scheduled or which models instantiate them. The framework is paradigm-agnostic — its implications extend beyond PBE to any setting where bounded symbolic and neural reasoners operate over a shared state space.</p>
+    </div>
+  </div>
+</section>
+
+<!-- METHOD: TIIPS -->
+<section id="method">
+  <div class="wrapper">
+    <div class="eyebrow">Instantiation</div>
+    <h2>TIIPS: Transductively Informed Inductive Program Synthesis</h2>
+
+    <p>
+      TIIPS is a proof-of-concept instantiation of the cooperative framework that maintains interpretability by preserving the terminal objective of producing an explicit symbolic program. It pairs an inductive synthesizer f<sub>syn</sub> with a transductive guide f<sub>gui</sub>, both implemented as Transformer encoder-decoders. The key mechanism is an <em>incremental intervention schedule</em>: for increasing numbers of guided prefix steps j = 0 … J, the transductive guide sets the subtask target for the first j steps while f<sub>syn</sub> reasons freely over the remaining steps — each guided state acting as a new search root, not a fixed constraint. For full algorithmic and architectural details, see the <a href="#" style="color:var(--accent);">paper</a>.
+    </p>
+
+    <div class="callout amber reveal">
+      <div class="callout-label">Key Distinction from ExeDec</div>
+      <p>In ExeDec, f<sub>gui</sub> pre-determines the full trajectory before synthesis begins. In TIIPS, each call to f<sub>gui</sub> influences only the <em>immediate next subtask</em>. Once the inductive synthesizer reaches that state, it explores the full program space from there with no further prescription. The transductive prediction is a springboard, not a cage. j = 0 recovers the pure inductive baseline; j = J recovers ExeDec — all gains come from the cooperative regime in between.</p>
+    </div>
+  </div>
+</section>
+
+<!-- EXPERIMENTAL SETUP -->
+<section id="setup">
+  <div class="wrapper">
+    <div class="eyebrow">Experimental Setup</div>
+    <h2>Three Domains of Increasing Complexity</h2>
+    <p>
+      Domains are chosen to vary the structural property that matters most for cooperative reasoning: the degree of decomposition ambiguity, and the reliability of transductive guidance. All models share identical architectures and weights across conditions; the only variable is the interaction paradigm.
+    </p>
+
+    <div class="domain-grid reveal">
+      <div class="domain-card rf">
+        <div class="domain-pill">String Domain</div>
+        <h3>RobustFill</h3>
+        <p>String transformations with a DSL covering substring extraction and modification. Decomposition order is structurally fixed — each task has a single canonical solution trace. Designed to produce convergence between TIIPS and ExeDec, validating the cooperative framework's prediction.</p>
+      </div>
+      <div class="domain-card dc">
+        <div class="domain-pill">List Domain</div>
+        <h3>DeepCoder</h3>
+        <p>Integer list transformations via first- and higher-order functions (Map, Filter, Scanl1…). Multiple valid programs and decompositions exist per task, giving cooperative reasoning room to outperform subordination.</p>
+      </div>
+      <div class="domain-card lb">
+        <div class="domain-pill">Extended List</div>
+        <h3>LambdaBeam</h3>
+        <p>Extends DeepCoder with dynamically constructed lambda functions and a conditional <code>If</code> operation. Branching paths amplify the cost of a single wrong transductive prediction — and correspondingly amplify cooperative gains.</p>
+      </div>
+    </div>
+
+    <div class="callout reveal" style="margin-top:2rem;">
+      <div class="callout-label">Evaluation Protocol</div>
+      <p style="font-size:0.87rem;">5 random seeds · 1,000 test tasks per seed and category · beam size 10 · leave-one-out (LOO) protocol · 5 compositional generalisation categories: <em>in-distribution, length generalisation, compose different concepts, switch concept order, compose new operation, add operation functionality</em>. TIIPS and ExeDec make identical total model calls per task. Architecture: Transformer, embedding dim 512, hidden dim 1024, 3 layers, 4 attention heads. Training: single RTX A6000, ~1 day per category.</p>
+    </div>
+  </div>
+</section>
+
+<!-- RESULTS -->
+<section id="results">
+  <div class="wrapper">
+    <div class="eyebrow">Results</div>
+    <h2>TIIPS Outperforms Across the Board</h2>
+
+    <p>
+      TIIPS consistently outperforms both the inductive baseline and ExeDec across DeepCoder and LambdaBeam, in all five compositional generalisation categories. All TIIPS vs. ExeDec differences are statistically significant (paired t-test, p &lt; 0.05). In RobustFill — a single-trace domain with structurally fixed decomposition order — TIIPS and ExeDec converge, exactly as the cooperative framework predicts.
+    </p>
+
+    <!-- Grouped bar charts side by side -->
+    <div class="chart-pair reveal">
+      <div class="chart-box">
+        <div class="chart-box-title">DeepCoder — Task Accuracy (%)</div>
+        <canvas id="chartDC"></canvas>
+      </div>
+      <div class="chart-box">
+        <div class="chart-box-title">LambdaBeam — Task Accuracy (%)</div>
+        <canvas id="chartLB"></canvas>
+      </div>
+    </div>
+    <div class="chart-legend">
+      <div class="cl-item"><div class="cl-dot" style="background:#396332"></div>TIIPS</div>
+      <div class="cl-item"><div class="cl-dot" style="background:#6a598c"></div>ExeDec</div>
+      <div class="cl-item"><div class="cl-dot" style="background:#9e9e96"></div>Ind. Baseline</div>
+    </div>
+
+    <!-- Venn + Density side by side -->
+    <h3 style="font-family:var(--serif);font-size:1.3rem;margin:2.8rem 0 0.5rem;font-weight:400;">The Cooperative Dividend</h3>
+    <p>TIIPS solves a substantial set of tasks that are unreachable by either baseline <em>individually or in combination</em> — ruling out both the ensemble and prefix-of-ExeDec explanations. The Venn diagrams below show the overlap of solved tasks (DeepCoder left, LambdaBeam right).</p>
+
+    <div class="two-col reveal">
+      <div class="vis-box">
+        <div class="vis-box-title">DeepCoder — Solved Tasks Overlap</div>
+        <canvas id="vennDC"></canvas>
+      </div>
+      <div class="vis-box">
+        <div class="vis-box-title">LambdaBeam — Solved Tasks Overlap</div>
+        <canvas id="vennLB"></canvas>
+      </div>
+    </div>
+
+    <!-- Robustness density plots -->
+    <h3 style="font-family:var(--serif);font-size:1.3rem;margin:2.8rem 0 0.5rem;font-weight:400;">Robustness: Intent Match &amp; Syntactic Overlap</h3>
+    <p>
+      Beyond accuracy, TIIPS solutions concentrate in the high intent match / high syntactic overlap quadrant — matching the <em>intended</em> program behavior, not just the training examples. ExeDec solutions spread across lower quadrants: a fingerprint of the subordination failure mode, where a slightly off-target transductive prediction forces the synthesizer to produce convoluted programs that satisfy the examples but deviate from the canonical transformation.
+    </p>
+
+    <div class="two-col reveal">
+      <div class="vis-box">
+        <div class="vis-box-title">LambdaBeam — ExeDec</div>
+        <img src="density_lambdabeam_exedec.pdf" alt="Density plot ExeDec LambdaBeam" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"/>
+        <canvas id="densityExeDec" height="260" style="display:none"></canvas>
+      </div>
+      <div class="vis-box">
+        <div class="vis-box-title">LambdaBeam — TIIPS</div>
+        <img src="density_lambdabeam_tiips.pdf" alt="Density plot TIIPS LambdaBeam" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"/>
+        <canvas id="densityTIIPS" height="260" style="display:none"></canvas>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- CITATION -->
+<section id="citation">
+  <div class="wrapper">
+    <div class="eyebrow">Cite</div>
+    <h2>Citation</h2>
+    <p style="font-size:0.88rem; color:var(--muted); margin-bottom:1.2rem;">Accepted at ECML PKDD 2026, Naples. Please cite the conference version when available.</p>
+    <div class="citation-box reveal">@inproceedings{zenkner2026tiips,
+  title     = {Beyond Either-Or Reasoning: Transduction and Induction
+               as Cooperative Problem-Solving Paradigms},
+  author    = {Zenkner, Janis and Sesterhenn, Tobias and Bartelt, Christian},
+  booktitle = {Proceedings of the European Conference on Machine Learning
+               and Principles and Practice of Knowledge Discovery
+               in Databases (ECML PKDD)},
+  year      = {2026},
+  address   = {Naples, Italy}
+}</div>
+    <button class="copy-btn" onclick="copyBib()">Copy BibTeX</button>
+  </div>
+</section>
+
+<footer>
+  <p>ECML PKDD 2026 &nbsp;·&nbsp; Clausthal University of Technology &nbsp;·&nbsp;
+  Contact: <a href="mailto:janis.zenkner@tu-clausthal.de">janis.zenkner@tu-clausthal.de</a></p>
+</footer>
+
+<script>
+/* ── REVEAL ── */
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+}, { threshold: 0.07 });
+document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+/* ── PALETTE ── */
+const C_TIIPS    = '#396332';
+const C_EXEDEC   = '#6a598c';
+const C_BASELINE = '#9e9e96';
+
+/* ── GROUPED BAR CHART (custom canvas) ── */
+const chartData = {
+  DC: {
+    labels: ['In-dist.', 'Len. gen.', 'Comp.\ndiff.', 'Switch\norder', 'Comp.\nnew op.', 'Add\nfunc.'],
+    yMax: 60,
+    series: [
+      { label: 'TIIPS',         color: C_TIIPS,    values: [47.5, 6.34, 26.0, 26.6, 24.3, 17.0], err: [0.75, 1.60, 1.59, 1.78, 2.53, 0.70] },
+      { label: 'ExeDec',        color: C_EXEDEC,   values: [45.2, 4.40, 19.1, 14.3, 11.6, 9.76], err: [1.70, 0.83, 1.46, 4.17, 1.62, 1.16] },
+      { label: 'Ind. Baseline', color: C_BASELINE, values: [30.4, 0.16, 15.2, 16.6, 17.1, 11.0], err: [1.69, 0.21, 0.81, 1.23, 1.93, 1.09] },
+    ]
+  },
+  LB: {
+    labels: ['In-dist.', 'Len. gen.', 'Comp.\ndiff.', 'Switch\norder', 'Comp.\nnew op.', 'Add\nfunc.'],
+    yMax: 70,
+    series: [
+      { label: 'TIIPS',         color: C_TIIPS,    values: [57.6, 16.6, 39.3, 26.8, 35.0, 31.1], err: [0.91, 1.73, 3.66, 0.87, 1.19, 3.87] },
+      { label: 'ExeDec',        color: C_EXEDEC,   values: [51.0, 13.7, 33.0, 17.8, 31.1, 21.0], err: [1.50, 2.04, 3.08, 1.32, 1.50, 3.32] },
+      { label: 'Ind. Baseline', color: C_BASELINE, values: [42.7,  7.5, 21.5, 19.3, 18.9, 16.7], err: [2.81, 1.34, 2.56, 1.37, 2.81, 3.54] },
+    ]
+  }
+};
+
+function hexToRgba(hex, alpha) {
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function drawBarChart(canvasId, data) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const DPR  = window.devicePixelRatio || 1;
+  const box  = canvas.parentElement;
+  const CW   = box.clientWidth - 28;   // CSS width
+  const CH   = Math.round(CW * 0.68);  // aspect ratio ~3:2
+
+  // set both CSS size and backing store size
+  canvas.style.width  = CW + 'px';
+  canvas.style.height = CH + 'px';
+  canvas.width  = CW * DPR;
+  canvas.height = CH * DPR;
+
+  const ctx = canvas.getContext('2d');
+  ctx.scale(DPR, DPR);
+
+  const PAD = { top: 16, right: 16, bottom: 56, left: 46 };
+  const W = CW - PAD.left - PAD.right;
+  const H = CH - PAD.top  - PAD.bottom;
+
+  ctx.clearRect(0, 0, CW, CH);
+
+  const nCats   = data.labels.length;
+  const nSeries = data.series.length;
+  const groupW  = W / nCats;
+  const barGap  = groupW * 0.06;
+  const groupGap= groupW * 0.18;
+  const barW    = (groupW - groupGap - barGap*(nSeries-1)) / nSeries;
+
+  /* ── Y-axis gridlines & ticks ── */
+  const yTicks = 5;
+  ctx.font = `10px 'DM Mono', monospace`;
+  ctx.fillStyle = '#6b6b65';
+  ctx.textAlign = 'right';
+  for (let i = 0; i <= yTicks; i++) {
+    const val = (data.yMax / yTicks) * i;
+    const y   = PAD.top + H - (val / data.yMax) * H;
+    // gridline
+    ctx.strokeStyle = 'rgba(0,0,0,0.07)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(PAD.left, y); ctx.lineTo(PAD.left + W, y); ctx.stroke();
+    // tick label
+    ctx.fillText(Math.round(val) + '%', PAD.left - 6, y + 3.5);
+  }
+
+  /* ── Bars ── */
+  data.series.forEach((s, si) => {
+    s.values.forEach((val, ci) => {
+      const groupX = PAD.left + ci * groupW + groupGap / 2;
+      const barX   = groupX + si * (barW + barGap);
+      const barH   = (val / data.yMax) * H;
+      const barY   = PAD.top + H - barH;
+
+      // bar fill
+      ctx.fillStyle = hexToRgba(s.color, 0.82);
+      const radius = 2;
+      ctx.beginPath();
+      ctx.moveTo(barX + radius, barY);
+      ctx.lineTo(barX + barW - radius, barY);
+      ctx.arcTo(barX + barW, barY, barX + barW, barY + radius, radius);
+      ctx.lineTo(barX + barW, barY + barH);
+      ctx.lineTo(barX,        barY + barH);
+      ctx.lineTo(barX, barY + radius);
+      ctx.arcTo(barX, barY, barX + radius, barY, radius);
+      ctx.closePath();
+      ctx.fill();
+
+      // error bar
+      const errH = (s.err[ci] / data.yMax) * H;
+      const midX = barX + barW / 2;
+      ctx.strokeStyle = hexToRgba(s.color, 0.9);
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(midX, barY - errH);
+      ctx.lineTo(midX, barY + errH);
+      ctx.stroke();
+      // caps
+      ctx.beginPath();
+      ctx.moveTo(midX - 2.5, barY - errH);
+      ctx.lineTo(midX + 2.5, barY - errH);
+      ctx.moveTo(midX - 2.5, barY + errH);
+      ctx.lineTo(midX + 2.5, barY + errH);
+      ctx.stroke();
+    });
+  });
+
+  /* ── X-axis baseline ── */
+  ctx.strokeStyle = '#d4d4ce';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(PAD.left, PAD.top + H);
+  ctx.lineTo(PAD.left + W, PAD.top + H);
+  ctx.stroke();
+
+  /* ── X-axis category labels (multi-line) ── */
+  ctx.fillStyle = '#6b6b65';
+  ctx.textAlign = 'center';
+  ctx.font = `10px 'DM Sans', sans-serif`;
+  data.labels.forEach((lbl, ci) => {
+    const groupX = PAD.left + ci * groupW + groupW / 2;
+    const baseY  = PAD.top + H + 13;
+    const lines  = lbl.split('\n');
+    lines.forEach((line, li) => {
+      ctx.fillText(line, groupX, baseY + li * 12);
+    });
+  });
+
+  /* ── Y-axis label ── */
+  ctx.save();
+  ctx.translate(11, PAD.top + H / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillStyle = '#6b6b65';
+  ctx.font = `10px 'DM Sans', sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText('Task accuracy (%)', 0, 0);
+  ctx.restore();
+}
+
+function initCharts() {
+  drawBarChart('chartDC', chartData.DC);
+  drawBarChart('chartLB', chartData.LB);
+}
+
+// Draw on load and on resize
+window.addEventListener('load',   () => { initCharts(); initVenns(); });
+window.addEventListener('resize', () => { initCharts(); initVenns(); });
+
+/* ── VENN DIAGRAM ── */
+function drawVenn(canvasId, data) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const DPR = window.devicePixelRatio || 1;
+  const box  = canvas.parentElement;
+
+  // ── Fixed logical size we design to ──
+  // We work in a 400 × 380 logical space, then scale to fit the box.
+  const LW = 400, LH = 380;
+  const scale = (box.clientWidth - 28) / LW;
+  const CW = LW * scale, CH = LH * scale;
+
+  canvas.style.width  = CW + 'px';
+  canvas.style.height = CH + 'px';
+  canvas.width  = Math.round(CW * DPR);
+  canvas.height = Math.round(CH * DPR);
+
+  const ctx = canvas.getContext('2d');
+  ctx.scale(DPR * scale, DPR * scale);   // draw in LW×LH logical coords
+  ctx.clearRect(0, 0, LW, LH);
+
+  // ── Geometry in logical coords (LW=400, LH=380) ──
+  // Three circles with centre-to-centre distance d, arranged as equilateral triangle.
+  // Overlap = r - d/2 should be ~35% of r for nice visual overlap.
+  // With d=130, r=100: overlap = 100-65 = 35 = 35% of r. ✓
+  // Circle centres:
+  //   Top-left  (ExeDec):    cx1=155, cy1=130
+  //   Top-right (TIIPS):     cx2=245, cy2=130
+  //   Bottom    (Baseline):  cx3=200, cy3=242   (130 + 130*sin60 ≈ 130+112=242)
+  // Bounds check:
+  //   ExeDec top:   130-100 = 30  → label at y=18 ✓
+  //   Baseline bot: 242+100 = 342 → label at y=358 ✓ (LH=380)
+  //   ExeDec left:  155-100 = 55  → number at x=55+margin ✓
+  //   TIIPS right:  245+100 = 345 → number at x=345-margin ✓
+
+  const r   = 100;
+  const d   = 130;   // centre-to-centre
+  const cx1 = 155, cy1 = 130;   // ExeDec
+  const cx2 = 245, cy2 = 130;   // TIIPS
+  const cx3 = 200, cy3 = 243;   // Ind. Baseline  (130 + d*sin60 = 130+112.6)
+
+  // ── Fill ──
+  function fillC(cx, cy, color) {
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2);
+    ctx.fillStyle = color; ctx.fill();
+  }
+  fillC(cx1, cy1, 'rgba(106,89,140,0.20)');
+  fillC(cx2, cy2, 'rgba(57,99,50,0.20)');
+  fillC(cx3, cy3, 'rgba(158,158,150,0.20)');
+
+  // ── Stroke ──
+  function strokeC(cx, cy, color) {
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2);
+    ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.stroke();
+  }
+  strokeC(cx1, cy1, C_EXEDEC);
+  strokeC(cx2, cy2, C_TIIPS);
+  strokeC(cx3, cy3, C_BASELINE);
+
+  // ── Circle name labels ──
+  ctx.textAlign = 'center';
+  ctx.font = `500 11px 'DM Mono', monospace`;
+  ctx.fillStyle = C_EXEDEC;
+  ctx.fillText('ExeDec',       cx1 - 28, cy1 - r - 8);
+  ctx.fillStyle = C_TIIPS;
+  ctx.fillText('TIIPS',        cx2 + 28, cy2 - r - 8);
+  ctx.fillStyle = C_BASELINE;
+  ctx.fillText('Ind. Baseline', cx3,     cy3 + r + 16);
+
+  // ── Region number labels ──
+  // Region centres are computed so they sit clearly inside each zone.
+  // d=130, r=100: intersection chord at x = d/2 = 65 from each centre.
+  // Three-way centroid: ((155+245+200)/3, (130+130+243)/3) = (200, 168)
+  ctx.font = `400 10.5px 'DM Sans', sans-serif`;
+  ctx.fillStyle = '#1a1a18';
+
+  function lbl(x, y, txt) {
+    ctx.textAlign = 'center';
+    ctx.strokeStyle = 'rgba(220,220,218,0.85)';
+    ctx.lineWidth = 3; ctx.lineJoin = 'round';
+    ctx.strokeText(txt, x, y);
+    ctx.fillText(txt, x, y);
+  }
+
+  // ExeDec only  — far left of cx1, mid-height of top circles
+  lbl(cx1 - 72, cy1,       data.exedec_only);
+  // TIIPS only   — far right of cx2
+  lbl(cx2 + 72, cy2,       data.tiips_only);
+  // Baseline only — well below cy3
+  lbl(cx3,      cy3 + 68,  data.baseline_only);
+  // ExeDec ∩ TIIPS only (top strip, above triple zone)
+  lbl(200,      cy1 - 28,  data.both_et);
+  // ExeDec ∩ Baseline only: midpoint of (cx1,cy1)–(cx3,cy3), pushed away from TIIPS
+  lbl(162, 186, data.exedec_base);
+  // TIIPS ∩ Baseline only: midpoint of (cx2,cy2)–(cx3,cy3), pushed away from ExeDec
+  lbl(238, 186, data.tiips_base);
+  // All three — centroid
+  lbl(200,      168,        data.all_three);
+}
+
+function initVenns() {
+  // DeepCoder Venn (numbers from paper Fig 5a)
+  drawVenn('vennDC', {
+    exedec_only:  '1±1',
+    tiips_only:   '221±33',
+    both_et:      '1152±74',
+    all_three:    '1157±84',
+    tiips_base:   '341±34',
+    exedec_base:  '0±0',
+    baseline_only:'0±0'
+  });
+  // LambdaBeam Venn (numbers from paper Fig 5b)
+  drawVenn('vennLB', {
+    exedec_only:  '42±5',
+    tiips_only:   '137±9',
+    both_et:      '579±65',
+    all_three:    '875±59',
+    tiips_base:   '255±41',
+    exedec_base:  '0±0',
+    baseline_only:'4±1'
+  });
+}
+
+/* ── Fallback density sketches (shown if PDF embed fails) ── */
+function drawDensitySketch(canvasId, isExeDec) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.parentElement.clientWidth - 28;
+  canvas.width = W; canvas.height = W * 0.85;
+  const w = canvas.width, h = canvas.height * 0.85;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // axes
+  const pad = {l:48, r:16, t:16, b:48};
+  const pw = w - pad.l - pad.r, ph = h - pad.t - pad.b;
+  ctx.strokeStyle = '#d4d4ce'; ctx.lineWidth = 1;
+  ctx.strokeRect(pad.l, pad.t, pw, ph);
+  // dashed midlines
+  ctx.setLineDash([4,4]); ctx.strokeStyle = '#9e9e96';
+  ctx.beginPath(); ctx.moveTo(pad.l + pw/2, pad.t); ctx.lineTo(pad.l + pw/2, pad.t+ph); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pad.l, pad.t+ph/2); ctx.lineTo(pad.l+pw, pad.t+ph/2); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // axis labels
+  ctx.fillStyle = '#6b6b65'; ctx.font = '10px DM Sans, sans-serif'; ctx.textAlign='center';
+  ctx.fillText('Intent match per task [%]', pad.l + pw/2, h + 4);
+  ctx.save(); ctx.translate(12, pad.t + ph/2); ctx.rotate(-Math.PI/2);
+  ctx.fillText('Syntactic overlap per task [%]', 0, 0); ctx.restore();
+  ['0','50','100'].forEach((v,i) => { ctx.fillText(v, pad.l + i*pw/2, pad.t+ph+14); });
+
+  // blob
+  const color = isExeDec ? 'rgba(106,89,140,' : 'rgba(57,99,50,';
+  ctx.beginPath();
+  if (isExeDec) {
+    // left-heavy blob
+    ctx.ellipse(pad.l + pw*0.22, pad.t + ph*0.6, pw*0.22, ph*0.28, -0.3, 0, Math.PI*2);
+  } else {
+    // right-heavy blob
+    ctx.ellipse(pad.l + pw*0.65, pad.t + ph*0.28, pw*0.25, ph*0.3, 0.2, 0, Math.PI*2);
+  }
+  ctx.fillStyle = color+'0.18)'; ctx.fill();
+  ctx.strokeStyle = color+'0.6)'; ctx.lineWidth=1.5; ctx.stroke();
+
+  // quadrant numbers
+  ctx.font = 'bold 12px DM Serif Display, serif'; ctx.fillStyle = '#1a1a18';
+  if (isExeDec) {
+    ctx.textAlign='center';
+    ctx.fillText('26 ± 14', pad.l + pw*0.26, pad.t + ph*0.28);
+    ctx.fillText('34 ± 37', pad.l + pw*0.76, pad.t + ph*0.28);
+    ctx.fillText('110 ± 35', pad.l + pw*0.26, pad.t + ph*0.72);
+    ctx.fillText('11 ± 8',  pad.l + pw*0.76, pad.t + ph*0.72);
+  } else {
+    ctx.textAlign='center';
+    ctx.fillText('6 ± 3',   pad.l + pw*0.26, pad.t + ph*0.28);
+    ctx.fillText('133 ± 56',pad.l + pw*0.76, pad.t + ph*0.28);
+    ctx.fillText('90 ± 25', pad.l + pw*0.26, pad.t + ph*0.72);
+    ctx.fillText('38 ± 14', pad.l + pw*0.76, pad.t + ph*0.72);
+  }
+}
+
+// Check if PDFs loaded; fallback canvases are hidden by default and shown by onerror
+// Also draw them proactively for environments that can't embed PDFs
+window.addEventListener('load', () => {
+  // Try converting PDF to image via object tag approach — fall back to canvas sketches
+  ['densityExeDec','densityTIIPS'].forEach((id, i) => {
+    const c = document.getElementById(id);
+    if (c && c.style.display !== 'none') {
+      drawDensitySketch(id, i === 0);
+    }
+  });
+  // If img loaded fine, canvases stay hidden. If onerror fired, canvas is visible; draw it.
+  document.querySelectorAll('.vis-box img').forEach((img, i) => {
+    img.addEventListener('error', () => {
+      const canvasId = i === 0 ? 'densityExeDec' : 'densityTIIPS';
+      const c = document.getElementById(canvasId);
+      if (c) { c.style.display = 'block'; drawDensitySketch(canvasId, i === 0); }
+    });
+  });
+});
+
+/* ── COPY BIBTEX ── */
+function copyBib() {
+  const text = `@inproceedings{zenkner2026tiips,
+  title     = {Beyond Either-Or Reasoning: Transduction and Induction as Cooperative Problem-Solving Paradigms},
+  author    = {Zenkner, Janis and Sesterhenn, Tobias and Bartelt, Christian},
+  booktitle = {Proceedings of the European Conference on Machine Learning and Principles and Practice of Knowledge Discovery in Databases (ECML PKDD)},
+  year      = {2026},
+  address   = {Naples, Italy}
+}`;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = '✓ Copied!';
+    btn.style.borderColor = 'var(--accent)';
+    btn.style.color = 'var(--accent)';
+    setTimeout(() => { btn.textContent = 'Copy BibTeX'; btn.style.borderColor = ''; btn.style.color = ''; }, 2200);
+  });
+}
+</script>
+</body>
+</html>
