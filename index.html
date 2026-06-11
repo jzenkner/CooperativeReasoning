@@ -193,13 +193,13 @@
     .domain-card { background: var(--surface); border: 1px solid var(--border); border-radius: 5px; padding: 1.4rem 1.5rem; transition: border-color .2s; }
     .domain-card:hover { border-color: var(--accent); }
     .domain-pill { display: inline-block; font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.1em; padding: 2px 8px; border-radius: 2px; margin-bottom: 0.65rem; text-transform: uppercase; }
-    .domain-card.rf .domain-pill { color: var(--accent);  border: 1px solid rgba(17,94,23,0.35); }
+    .domain-card.rf .domain-pill { color: var(--accent3);  border: 1px solid rgba(17,94,23,0.35); }
     .domain-card.dc .domain-pill { color: var(--accent2); border: 1px solid rgba(57,99,50,0.35); }
-    .domain-card.lb .domain-pill { color: var(--accent3); border: 1px solid rgba(106,89,140,0.35); }
+    .domain-card.lb .domain-pill { color: var(--accent2); border: 1px solid rgba(106,89,140,0.35); }
     .domain-card h3 { font-family: var(--mono); font-size: 0.84rem; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
-    .domain-card.rf h3 { color: var(--accent); }
+    .domain-card.rf h3 { color: var(--accent3); }
     .domain-card.dc h3 { color: var(--accent2); }
-    .domain-card.lb h3 { color: var(--accent3); }
+    .domain-card.lb h3 { color: var(--accent2); }
     .domain-card p { font-size: 0.84rem; margin: 0; }
 
     code { font-family: var(--mono); font-size: 0.82em; background: var(--surface); color: var(--accent); padding: 1px 5px; border-radius: 2px; }
@@ -382,7 +382,7 @@
               <div class="traj-step"><span class="traj-prog">p₃</span><span class="traj-arw">→</span></div>
               <div class="traj-node goal">s₄</div>
             </div>
-            <p class="p-desc">Inductive steps (solid, p<sub>i</sub>) and transductive search-horizon resets (dashed, M) interleave freely. After each M-step, f<sub>syn</sub> recovers full search autonomy — the prediction is a springboard, not a blueprint.</p>
+            <p class="p-desc">Inductive (solid, p<sub>i</sub>) and transductive (dashed, M) steps interleave freely. After each M-step, f<sub>syn</sub> recovers full search autonomy — the prediction is a springboard, not a blueprint.</p>
           </div>
 
         </div><!-- /paradigm-stack -->
@@ -521,11 +521,6 @@
     </p>
 
     <div class="domain-grid reveal">
-      <div class="domain-card rf">
-        <div class="domain-pill">String Domain</div>
-        <h3>RobustFill</h3>
-        <p>String transformations with a DSL covering substring extraction and modification. Decomposition order is structurally fixed — each task has a single canonical solution trace. Designed to produce convergence between TIIPS and ExeDec, validating the cooperative framework's prediction.</p>
-      </div>
       <div class="domain-card dc">
         <div class="domain-pill">List Domain</div>
         <h3>DeepCoder</h3>
@@ -535,6 +530,11 @@
         <div class="domain-pill">Extended List</div>
         <h3>LambdaBeam</h3>
         <p>Extends DeepCoder with dynamically constructed lambda functions and a conditional <code>If</code> operation. Branching paths amplify the cost of a single wrong transductive prediction — and correspondingly amplify cooperative gains.</p>
+      </div>
+      <div class="domain-card rf">
+        <div class="domain-pill">String Domain</div>
+        <h3>RobustFill</h3>
+        <p>String transformations with a DSL covering substring extraction and modification. Decomposition order is structurally fixed — each task has a single canonical solution trace. Designed to produce convergence between TIIPS and ExeDec, validating the cooperative framework's prediction.</p>
       </div>
     </div>
 
@@ -620,8 +620,7 @@
   booktitle = {Proceedings of the European Conference on Machine Learning
                and Principles and Practice of Knowledge Discovery
                in Databases (ECML PKDD)},
-  year      = {2026},
-  address   = {Naples, Italy}
+  year      = {2026}
 }</div>
     <button class="copy-btn" onclick="copyBib()">Copy BibTeX</button>
   </div>
