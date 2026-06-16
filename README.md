@@ -88,7 +88,7 @@ bash spec_decomposition/run_robustfill_training.sh
 bash spec_decomposition/run_lambdabeam_training.sh
 ```
 
-Adjust scripts for your environment (TPU, SLURM, Docker) as needed.
+Note: Adjust scripts for your environment (TPU, SLURM, Docker) as needed. Relative paths for model loading must be changed to absolute paths.
 
 ---
 
