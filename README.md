@@ -4,8 +4,6 @@
 
 ---
 
-> *When neither paradigm should unconditionally own the trajectory.*
-
 Official implementation of **TIIPS**, introduced in:
 
 > **Beyond Either-Or Reasoning: Transduction and Induction as Cooperative Problem-Solving Paradigms**  
